@@ -21,6 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+#include <migraphx/dead_code_elimination.hpp>
+#include <migraphx/pass_manager.hpp>
+#include <migraphx/shape.hpp>
 #include <migraphx/operation.hpp>
 #include <migraphx/float_equal.hpp>
 #include <migraphx/instruction_ref.hpp>
@@ -37,6 +41,7 @@
 #include <migraphx/pass_manager.hpp>
 #include <numeric>
 #include <set>
+#include <unordered_map>
 
 namespace migraphx {
 inline namespace MIGRAPHX_INLINE_NS {
@@ -50,8 +55,30 @@ static std::vector<shape::type_t>& get_quantizable_type()
     return quantable_types;
 }
 
-void quantize_int8_pass::apply(module& m) const // NOLINT
+static void quantize_params(migraphx::module& m)
 {
+    std::cout << "#### quantize_paramns " << std::endl;
+    std::unordered_map<std::string, shape> param_names = m.get_parameter_shapes();
+
+    for(auto [name, shape] : param_names)
+    {
+        auto param = m.get_parameter(name);
+        std::cout << "#### quantize " << name << " shape" << std::endl;
+        if(shape.type() == shape::float_type)
+        {
+            auto new_param =
+                m.add_parameter(name, migraphx::shape{shape::half_type, shape.lens()});
+            m.replace_instruction(param, new_param);
+            m.remove_instruction(param);
+        }
+        std::cout << "#### param replaced " << std::endl;
+    }
+}
+
+void quantize_int8_pass::apply(module_pass_manager& mpm) const // NOLINT
+{
+    std::cout << "#### quantize_int8_pass::apply: "<< std::endl;
+    module& m = mpm.get_module();
     const auto& quantizable_types = get_quantizable_type();
     for(auto ins : iterator_for(m))
     {
@@ -82,6 +109,8 @@ void quantize_int8_pass::apply(module& m) const // NOLINT
             m.replace_instruction(ins, dq_in);
         }
     }
+    quantize_params(m);
+    mpm.run_pass(dead_code_elimination{});
 }
 
 void capture_arguments_pass::apply(module& m) const // NOLINT
