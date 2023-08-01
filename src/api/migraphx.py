@@ -246,6 +246,15 @@ def module(h):
     h.method('add_parameter',
              api.params(name='const char*', shape='const migraphx::shape&'),
              returns='migraphx::instruction_ref')
+    h.method('get_parameter',
+             api.params(name='const char*'),
+             returns='migraphx::instruction_ref')
+    h.method('replace_instruction',
+             api.params(ins='const migraphx::instruction_ref', rep='const migraphx::instruction_ref'),
+             returns='migraphx::instruction_ref')
+    h.method('remove_instruction',
+             api.params(ins='const migraphx::instruction_ref'),
+             returns='migraphx::instruction_ref')
     h.method('add_return',
              api.params(args='std::vector<migraphx::instruction_ref>'),
              returns='migraphx::instruction_ref')

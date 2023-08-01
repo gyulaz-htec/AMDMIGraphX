@@ -1063,10 +1063,31 @@ struct module
         return instruction(param_ins, own{});
     }
 
+    instruction get_parameter(const std::string& name)
+    {
+        migraphx_instruction_t param_ins;
+        call(&migraphx_module_get_parameter, &param_ins, mm.get(), name.c_str());
+        return instruction(param_ins, own{});
+    }
+
     instruction add_return(const migraphx::instructions& args)
     {
         migraphx_instruction_t ret_ins;
         call(&migraphx_module_add_return, &ret_ins, mm.get(), args.get_handle_ptr());
+        return instruction(ret_ins, own{});
+    }
+
+    instruction replace_instruction(const instruction& ins, const instruction& rep)
+    {
+        migraphx_instruction_t ret_ins;
+        call(&migraphx_module_replace_instruction, &ret_ins, mm.get(), ins.get_handle_ptr(), rep.get_handle_ptr());
+        return instruction(ret_ins, own{});
+    }
+
+    instruction remove_instruction(const instruction& ins)
+    {
+        migraphx_instruction_t ret_ins;
+        call(&migraphx_module_remove_instruction, &ret_ins, mm.get(), ins.get_handle_ptr());
         return instruction(ret_ins, own{});
     }
 

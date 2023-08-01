@@ -1558,6 +1558,50 @@ extern "C" migraphx_status migraphx_module_add_parameter(migraphx_instruction_t*
     return api_error_result;
 }
 
+extern "C" migraphx_status migraphx_module_get_parameter(migraphx_instruction_t* out,
+                                                         migraphx_module_t module,
+                                                         const char* name)
+{
+    auto api_error_result = migraphx::try_([&] {
+        if(module == nullptr)
+            MIGRAPHX_THROW(migraphx_status_bad_param, "Bad parameter module: Null pointer");
+        *out = allocate<migraphx_instruction_t>((module->object).get_parameter((name)));
+    });
+    return api_error_result;
+}
+
+extern "C" migraphx_status migraphx_module_replace_instruction(migraphx_instruction_t* out,
+                                                               migraphx_module_t module,
+                                                               const_migraphx_instruction_t ins,
+                                                               const_migraphx_instruction_t rep)
+{
+    auto api_error_result = migraphx::try_([&] {
+        if(module == nullptr)
+            MIGRAPHX_THROW(migraphx_status_bad_param, "Bad parameter module: Null pointer");
+        if(ins == nullptr)
+            MIGRAPHX_THROW(migraphx_status_bad_param, "Bad parameter ins: Null pointer");
+        if(rep == nullptr)
+            MIGRAPHX_THROW(migraphx_status_bad_param, "Bad parameter rep: Null pointer");
+        *out = allocate<migraphx_instruction_t>(
+            (module->object).replace_instruction((ins->object), (rep->object)));
+    });
+    return api_error_result;
+}
+
+extern "C" migraphx_status migraphx_module_remove_instruction(migraphx_instruction_t* out,
+                                                              migraphx_module_t module,
+                                                              const_migraphx_instruction_t ins)
+{
+    auto api_error_result = migraphx::try_([&] {
+        if(module == nullptr)
+            MIGRAPHX_THROW(migraphx_status_bad_param, "Bad parameter module: Null pointer");
+        if(ins == nullptr)
+            MIGRAPHX_THROW(migraphx_status_bad_param, "Bad parameter ins: Null pointer");
+        *out = allocate<migraphx_instruction_t>((module->object).remove_instruction((ins->object)));
+    });
+    return api_error_result;
+}
+
 extern "C" migraphx_status migraphx_module_add_return(migraphx_instruction_t* out,
                                                       migraphx_module_t module,
                                                       migraphx_instructions_t args)

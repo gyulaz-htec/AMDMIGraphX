@@ -72,3 +72,5 @@ docs/_templates
 docs/.doxygen/docBin
 docs/_doxygen
 /_readthedocs
+
+/depend

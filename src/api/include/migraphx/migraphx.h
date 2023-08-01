@@ -389,6 +389,19 @@ migraphx_status migraphx_module_add_parameter(migraphx_instruction_t* out,
                                               const char* name,
                                               const_migraphx_shape_t shape);
 
+migraphx_status migraphx_module_get_parameter(migraphx_instruction_t* out,
+                                              migraphx_module_t module,
+                                              const char* name);
+
+migraphx_status migraphx_module_replace_instruction(migraphx_instruction_t* out,
+                                                    migraphx_module_t module,
+                                                    const_migraphx_instruction_t ins,
+                                                    const_migraphx_instruction_t rep);
+
+migraphx_status migraphx_module_remove_instruction(migraphx_instruction_t* out,
+                                                   migraphx_module_t module,
+                                                   const_migraphx_instruction_t ins);
+
 migraphx_status migraphx_module_add_return(migraphx_instruction_t* out,
                                            migraphx_module_t module,
                                            migraphx_instructions_t args);
