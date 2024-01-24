@@ -56,6 +56,10 @@ static void quantize_module(module& m, const std::vector<std::string>& ins_names
         auto inputs = ins->inputs();
         std::transform(inputs.begin(), inputs.end(), inputs.begin(), [&](auto input) {
             auto input_type = input->get_shape().type();
+            if(s.type() == shape::tuple_type)
+            {
+                std::cout << "## Input shape " << input->get_shape() << std::endl;
+            }
             if(input_type != shape::float_type and input_type != shape::double_type)
                 return input;
             return m.insert_instruction(
@@ -68,8 +72,38 @@ static void quantize_module(module& m, const std::vector<std::string>& ins_names
         // Convert back to original type after quantizing
         if(mod_inputs.empty())
         {
-            converted_ins = m.insert_instruction(
-                ins, make_op("convert", {{"target_type", s.type()}}), converted_ins);
+            // Unpack tuple type and convert each instruct
+            if(s.type() == shape::tuple_type)
+            {
+                std::cout << "### Unpacking touple, shape: " << s << " converted shape "
+                          << converted_ins->get_shape() << std::endl;
+                auto orig_outputs = ins->outputs();
+                std::unordered_map<std::string, shape::type_t> original_types;
+                std::transform(orig_outputs.begin(),
+                               orig_outputs.end(),
+                               std::inserter(original_types, original_types.end()),
+                               [](const auto& instr) {
+                                   return std::make_pair(instr->name(), instr->get_shape().type());
+                               });
+
+                auto outputs = converted_ins->outputs();
+                std::cout << "### Outputs size " << outputs.size() << std::endl;
+                std::for_each(outputs.begin(), outputs.end(), [&](auto& instr) {
+                    auto orig_type = original_types.at(instr->name());
+                    std::cout << "### Converting back from" << instr->get_shape().type() << " to "
+                                << orig_type << std::endl;
+                    if(orig_type != instr->get_shape().type())
+                    {
+                        converted_ins = m.insert_instruction(
+                            instr, make_op("convert", {{"target_type", orig_type}}), converted_ins);
+                    }
+                });
+            }
+            else
+            {
+                converted_ins = m.insert_instruction(
+                    ins, make_op("convert", {{"target_type", s.type()}}), converted_ins);
+            }
         }
         // Replace original instruction
         m.replace_instruction(ins, converted_ins);
