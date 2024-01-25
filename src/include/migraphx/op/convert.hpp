@@ -35,11 +35,12 @@ namespace op {
 struct convert : unary<convert>
 {
     shape::type_t target_type = shape::half_type;
+    std::vector<shape::type_t> sub_types = {};
 
     template <class Self, class F>
     static auto reflect(Self& self, F f)
     {
-        return pack(f(self.target_type, "target_type"));
+        return pack(f(self.target_type, "target_type"), f(self.sub_types, "sub_types"));
     }
 
     shape compute_shape(std::vector<shape> inputs) const
@@ -49,6 +50,11 @@ struct convert : unary<convert>
         if(input.dynamic())
         {
             return {target_type, input.dyn_dims()};
+        }
+        else if(input.type() == shape::tuple_type)
+        {
+            assert(input.sub_shapes().size() == sub_types.size());
+            return {input.sub_shapes()};
         }
         else
         {

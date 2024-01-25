@@ -68,8 +68,24 @@ static void quantize_module(module& m, const std::vector<std::string>& ins_names
         // Convert back to original type after quantizing
         if(mod_inputs.empty())
         {
-            converted_ins = m.insert_instruction(
-                ins, make_op("convert", {{"target_type", s.type()}}), converted_ins);
+            if (ins->get_shape().type() == shape::tuple_type)
+            {
+                std::vector<shape::type_t> sub_types = {};
+                auto sub_shapes                      = ins->get_shape().sub_shapes();
+                std::transform(sub_shapes.begin(),
+                               sub_shapes.end(),
+                               std::inserter(sub_types, sub_types.end()),
+                               [&](auto shape) { return shape.type(); });
+                converted_ins = m.insert_instruction(
+                    ins,
+                    make_op("convert", {{"target_type", s.type()}, {"sub_types", sub_types}}),
+                    converted_ins);
+            }
+            else
+            {
+                converted_ins = m.insert_instruction(
+                    ins, make_op("convert", {{"target_type", s.type()}}), converted_ins);
+            }
         }
         // Replace original instruction
         m.replace_instruction(ins, converted_ins);
